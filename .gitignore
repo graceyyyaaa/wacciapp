@@ -1,2 +1,7 @@
 node_modules/
+# Ignore local environment variables
 .env.local
+
+# Optional: Ignore all variations of .env files (highly recommended)
+.env
+.env.*
