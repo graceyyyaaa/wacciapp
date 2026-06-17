@@ -2,14 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getResults } from "@/lib/resultsStore";
-import { getEssays } from "@/lib/essayStore";
+import { getSubmissions } from "@/lib/submissionStore";
 
 export default function AdminPage() {
   const router = useRouter();
-
-  const [results, setResults] = useState<any[]>([]);
-  const [essays, setEssays] = useState<any[]>([]);
+  const [submissions, setSubmissions] = useState<any[]>([]);
 
   useEffect(() => {
     const isAdmin = localStorage.getItem("wacci_admin");
@@ -23,66 +20,53 @@ export default function AdminPage() {
   }, [router]);
 
   const loadData = async () => {
-    const resultData = await getResults();
-    const essayData = await getEssays();
-
-    setResults(resultData);
-    setEssays(essayData);
-  };
-
-  const getEssayScore = (candidate: string) => {
-    const essay = essays.find((e) => e.candidate_name === candidate);
-
-    return essay?.score || 0;
+    const data = await getSubmissions();
+    setSubmissions(data);
   };
 
   return (
     <main className="min-h-screen bg-slate-100 p-6">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold text-green-700 mb-6">
-          WACCI Admin Dashboard
+          WACCI Candidate Submissions
         </h1>
 
-        <div className="bg-white rounded-xl shadow p-6 overflow-auto">
-          <table className="w-full">
-            <thead>
-              <tr>
-                <th className="text-left p-2">Rank</th>
-                <th className="text-left p-2">Candidate</th>
-                <th className="text-left p-2">MCQ</th>
-                <th className="text-left p-2">Essay</th>
-                <th className="text-left p-2">Final</th>
-                <th className="text-left p-2">Status</th>
-              </tr>
-            </thead>
+        {submissions.map((submission, index) => (
+          <div key={index} className="bg-white rounded-xl shadow p-6 mb-6">
+            <h2 className="text-xl font-bold text-green-700 mb-4">
+              {submission.candidate_name}
+            </h2>
 
-            <tbody>
-              {results.map((r, index) => {
-                const essayScore = getEssayScore(r.candidate_name);
+            <p className="mb-2">
+              <strong>Date:</strong>{" "}
+              {new Date(submission.created_at).toLocaleString()}
+            </p>
 
-                const finalScore = Number(r.score) + Number(essayScore);
+            <hr className="my-4" />
 
-                return (
-                  <tr key={index}>
-                    <td className="p-2">{index + 1}</td>
+            <h3 className="font-bold text-lg mb-2">SECTION A: MATHEMATICS</h3>
 
-                    <td className="p-2">{r.candidate_name}</td>
+            <pre className="bg-gray-100 p-3 rounded overflow-auto">
+              {JSON.stringify(submission.section_a, null, 2)}
+            </pre>
 
-                    <td className="p-2">{r.score}</td>
+            <h3 className="font-bold text-lg mt-4 mb-2">SECTION B: SCIENCE</h3>
 
-                    <td className="p-2">{essayScore}</td>
+            <pre className="bg-gray-100 p-3 rounded overflow-auto">
+              {JSON.stringify(submission.section_b, null, 2)}
+            </pre>
 
-                    <td className="p-2 font-bold">{finalScore}</td>
+            <h3 className="font-bold text-lg mt-4 mb-2">ESSAY TOPIC</h3>
 
-                    <td className="p-2">
-                      {finalScore >= 30 ? "PASS" : "FAIL"}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+            <p>{submission.essay_topic}</p>
+
+            <h3 className="font-bold text-lg mt-4 mb-2">ESSAY ANSWER</h3>
+
+            <div className="bg-gray-100 p-3 rounded whitespace-pre-wrap">
+              {submission.essay_answer}
+            </div>
+          </div>
+        ))}
       </div>
     </main>
   );
